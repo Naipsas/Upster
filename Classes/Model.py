@@ -5,6 +5,8 @@
 #
 # Upster Project - GitHub
 #
+# Observable class comes from ToyMVC example 
+#
 
 import os
 import sys
@@ -13,6 +15,8 @@ import pathlib
 import subprocess
 
 from enum import Enum
+
+import numpy as np
 
 ## Clases auxiliares -  Enum
 
@@ -62,12 +66,14 @@ class Observable():
 # Esta clase no reconoce información nueva, trabaja con la que tiene
 class Application():
 
-  def __init__(self, name, size, store_status, local_status):
+  def __init__(self, name, size, categories, store_status, local_status):
 
     # Python script name
     self.__name = name
     # Tamaño en MB
     self.__size = size
+    # Categorías
+    self.__categories = categories
     # Estado de la aplicación en al tienda
     self.__store_status = store_status
     # Estado de la aplicación en local
@@ -79,6 +85,10 @@ class Application():
   # Devuelve el tamaño en MB
   def getSize(self):
     return self.__size
+
+  # Devuelve las categorías a las que pertenece la app
+  def getCategories(self):
+    return self.__categories
 
   # Devuelve el estado en la tienda
   def getStoreStatus(self):
@@ -121,30 +131,38 @@ class Library():
   def __init__(self, root_path):
 
     # Reconocemos las aplicaciones instaladas en la carpeta
-    apps_names = self.getApps(root_path)
+    apps = self.getApps(root_path)
 
-    # Comprobamos sus estados
-    for item in apps_names:
-      print("Hola")
-    
+    # Las añadimos
+    for item in apps:
+      __applications.append(item)
 
+  # Trunca a 2 decimales el número que se le proporciona
+  def __truncateSize(self, target):
+    decade = 10 ** 2
+    return np.trunc(target * decade) / decade
 
-  # Lista todas las aplicaciones encontradas
-  def getApps(self, root_path):
+  # Tamaño de una app en MB
+  def __calculateAppSize(self, folder = "."):
 
-    paths = os.listdir(root_path)
-    result = []
+    total_size = 0
 
-    for item in paths:
+    for dirpath, dirnames, filenames in os.walk(folder):
 
-      if os.path.isdir(item):
+      for f in filenames:
 
-        result.append(item)
+        fp = os.path.join(dirpath, f)
+        total_size += os.path.getsize(fp)
 
-    return result
+    total_size = float(total_size)
+    total_size /= (1024 ** 2)
+    total_size = self.__truncateSize(total_size)
+
+    return total_size
+
 
   # Identifica el estado de una app instalada
-  def IdentifyAppStatus(self, path, name):
+  def __IdentifyLocalAppStatus(self, path, name):
 
     result = subprocess.run([path + "/" + name + ".py", "-status"], stdout=subprocess.PIPE)
     result = result.stdout.decode("iso-8859-1")
@@ -159,6 +177,42 @@ class Library():
     return res
 
 
+  # Identifica el estado de una app en la tienda/servidor
+  def __askStoreStatus(self, name):
+
+    pass
+
+
+  # Identifica las categorías de una app en la tienda/servidor
+  def __askStoreCategories(self, name):
+
+    pass
+
+
+  # Lista todas las aplicaciones encontradas con sus características
+  def getApps(self, root_path):
+
+    paths = os.listdir(root_path)
+    result = []
+
+    for item in paths:
+
+      path = os.path.join(root_path, item)
+      app = []
+
+      if os.path.isdir(path):
+
+        # name, size, categories, store_status, local_status
+        app.append(item)
+        app.append(self.__calculateAppSize(path))
+        print("App " + item + " size: " + str(app[1]) + " MB")
+        app.append(self.__askStoreCategories(item))
+        # app.append(self.__askStoreStatus(item))
+        # app.append(self.__IdentifyLocalAppStatus(root_path, item))
+        
+    return result
+
+
 class Model():
 
   def __init__(self):
@@ -169,6 +223,5 @@ class Model():
     pathlib.Path(library_path).mkdir(exist_ok=True)
 
     # Inicializa la tienda y la biblioteca
-    self.__store = Store()
     self.__library = Library(library_path)
-
+    self.__store = Store()
