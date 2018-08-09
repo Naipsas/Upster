@@ -32,6 +32,33 @@ class Local_Status(Enum):
   NeedUpdate = 3
   Error = 4
 
+class Observable():
+
+  def __init__(self, initialValue=None):
+    self.data = initialValue
+    self.callbacks = {}
+
+  def addCallback(self, func):
+    self.callbacks[func] = 1
+
+  def delCallback(self, func):
+    del self.callbacks[func]
+
+  def __doCallbacks(self):
+    for func in self.callbacks:
+      func(self.data)
+
+  def set(self, data):
+    self.data = data
+    self.__doCallbacks()
+
+  def get(self):
+    return self.data
+
+  def unset(self):
+    self.data = None
+
+
 # Esta clase no reconoce información nueva, trabaja con la que tiene
 class Application():
 
