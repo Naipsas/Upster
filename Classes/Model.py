@@ -11,7 +11,6 @@
 import os
 import sys
 import shutil
-import pathlib
 import subprocess
 
 from enum import Enum
@@ -35,6 +34,13 @@ class Local_Status(Enum):
   Installed = 2
   NeedUpdate = 3
   Error = 4
+
+class Download_Status(Enum):
+
+  Stopped = 0
+  Downloading = 1
+  Finished = 2
+  Error = 3
 
 class Observable():
 
@@ -127,20 +133,24 @@ class Library():
 
   __applications = []
 
-
   def __init__(self, root_path):
 
     # Reconocemos las aplicaciones instaladas en la carpeta
-    apps = self.getApps(root_path)
+    apps = self.__getApps(root_path)
 
     # Las añadimos
     for item in apps:
-      __applications.append(item)
+      self.__applications.append(item)
+
+
+  def getApps(self):
+    return self.__applications
 
   # Trunca a 2 decimales el número que se le proporciona
   def __truncateSize(self, target):
     decade = 10 ** 2
     return np.trunc(target * decade) / decade
+
 
   # Tamaño de una app en MB
   def __calculateAppSize(self, folder = "."):
@@ -190,7 +200,7 @@ class Library():
 
 
   # Lista todas las aplicaciones encontradas con sus características
-  def getApps(self, root_path):
+  def __getApps(self, root_path):
 
     paths = os.listdir(root_path)
     result = []
@@ -204,11 +214,12 @@ class Library():
 
         # name, size, categories, store_status, local_status
         app.append(item)
-        app.append(self.__calculateAppSize(path))
-        print("App " + item + " size: " + str(app[1]) + " MB")
         app.append(self.__askStoreCategories(item))
+        app.append(self.__calculateAppSize(path))
         # app.append(self.__askStoreStatus(item))
         # app.append(self.__IdentifyLocalAppStatus(root_path, item))
+
+        result.append(app)
         
     return result
 
@@ -217,11 +228,14 @@ class Model():
 
   def __init__(self):
 
-    root_path = os.path.realpath(sys.argv[0]).replace(sys.argv[0], "")
-    library_path = root_path + "library"
-
-    pathlib.Path(library_path).mkdir(exist_ok=True)
-
     # Inicializa la tienda y la biblioteca
-    self.__library = Library(library_path)
-    self.__store = Store()
+    self.library = Observable()
+    self.store = Observable()
+
+
+  def libraryChanged(self, value):
+    self.library.set(value)
+
+
+  def storeChanged(self, value):
+    self.store.set(value)

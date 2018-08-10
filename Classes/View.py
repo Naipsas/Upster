@@ -11,50 +11,62 @@ import tkinter as tk
 
 # from Module import function
 # from Classes.File import Class
+from .Model import Model
+from .Model import Download_Status
 
 class View:
 
-  def __init__(self):
-    pass
+  def __init__(self, parent_tk):
 
+    # Configuramos la venana principal
+    self.createMainWindow(parent_tk)
 
-  ### Funciones generales - Invocadas fuera ###
-  def createMainWindow(self):
+  ### Funciones invocadas por el controlador ###
 
-    self.top = self.__createWindow()
+  def libraryChanged(self, library):
+
+    for item in self.downloadView.get_children():
+      self.deleteDownload(item)
+
+    for item in library.getApps():
+      self.insertNewDownload(item[0], str(item[1]), str(item[2]))
+
+  ### Creacion de la interfaz ###
+  def createMainWindow(self, parent_tk):
 
     # Creamos cada tab con su contenido
-    self.tab = []
-    # Cada tabla tiene asociado una lista de elementos a emplear
-    self.elements = []
+    tab = []
 
     # Tab 1: Store View
-    self.tab.append(self.__createTab(self.top))
+    tab.append(self.__createTab(parent_tk))
+    # Elementos
+
 
     # Tab 2: Library View
-    self.tab.append(self.__createTab(self.top))
+    tab.append(self.__createTab(parent_tk))
+    # Elementos
+
 
     # Tab 3: Download View
-    self.tab.append(self.__createTab(self.top))
-    self.tab3_elem = []
-    self.tab3_elem.append(self.__createDownloadTreeview(self.tab[2]))
+    tab.append(self.__createTab(parent_tk))
+    # Elementos
+    self.downloadView = self.__createDownloadTreeview(tab[2])
 
-  def insertNewDownload(self, name, category, size):
 
-    
+  def insertNewDownload(self, name, status, size):
 
     # Podemos cambiar 0 por "end" para insertarlo al final de la lista
-    tree.insert("", "end", text="Upster", values=("Programa", "5MB"))
+    self.downloadView.insert("", "end", text=name, values=(str(status), str(size) + "MB"))
 
-  def startWindowWorking(self):
+  def deleteDownload(self, download):
 
-    return self.top.mainloop()
+    for item in self.downloadView.get_children():
 
+      if item.text == download:
 
-  ### Funciones privadas - invocadas por las generales ###
-  def __createWindow(self):
+        self.downloadView.delete(item)
 
-    return tk.Tk()
+  ### Funciones privadas - anteriores ###
 
   # Parent debe de ser una ventana
   def __createTab(self, parent):
@@ -73,11 +85,9 @@ class View:
     tree.column("One", width=100)
     tree.column("Two", width=100)
 
-    tree.heading("One", text="Categoría")
+    tree.heading("One", text="Estado")
     tree.heading("Two", text="Tamaño")
 
     tree.pack()
 
     return tree
-
-  

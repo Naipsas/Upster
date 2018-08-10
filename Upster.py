@@ -5,29 +5,25 @@
 #
 # Upster Project - GitHub
 #
-
 # import pygame as pg
+
 import os
 import sys
 
-# from Module import function
-from Classes.View import View
-from Classes.Model import Model
+import tkinter as tk
+
+from Classes.Controller import Controller
 
 if __name__ == "__main__":
 
   try:
 
-    GuiManager = View()
-    ModelManager = Model()
+    parent = tk.Tk()
+    # parent.withdraw()
 
-    # Creamos la interfaz gráfica
-    view = GuiManager.createMainWindow()
+    app = Controller(parent)
 
-    # Adjuntamos la lógica
-
-    # Ponemos la interfaz en funcionamiento
-    GuiManager.startWindowWorking()
+    parent.mainloop()
 
   except Exception as e:
 
